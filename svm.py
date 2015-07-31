@@ -7,6 +7,8 @@ from sklearn import preprocessing
 import csv
 from sklearn.cross_validation import train_test_split
 from sklearn.metrics import classification_report
+import numpy as np
+import random
 
 # import from Excel
 with open('Dataset_C_transposed_reduced.csv', 'rb') as f:
@@ -20,6 +22,18 @@ for row in raw_data[1:]:
     target.append(row[0])
     data.append(map(lambda x: float(x), row[1:]))
 
+
+random_num = random.sample(xrange(7070), 100)
+random_data = []
+for row in raw_data[1:]:
+    new_raw = []
+    for i in row[1:]:
+        if i in random_num:
+            new_raw.append(row[1:][i])
+    random_data.append(map(lambda x: float(x), new_raw[1:]))
+
+random_data = (preprocessing.MinMaxScaler()).fit_transform(random_data)
+
 # scale data for SVM
 scaled_data = (preprocessing.MinMaxScaler()).fit_transform(data)
 # feature selection
@@ -29,11 +43,13 @@ feature_selected_names = map(lambda x: target_names[x + 1], feature_selected)
 data_selected = feature_selection.SelectKBest(feature_selection.chi2, k=100).fit_transform(scaled_data, target)
 
 X_train, X_test, y_train, y_test = train_test_split(
-    scaled_data, target, test_size=0.1, random_state=0)
+    scaled_data, target, test_size=0.2, random_state=0)
+
+C_range = np.logspace(-2, 10, 13)
+gamma_range = np.logspace(-9, 3, 13)
 
 # Set the parameters by cross-validation
-tuned_parameters = [{'kernel': ['rbf'], 'gamma': [1e-1, 1e-2],
-                     'C': [0.1, 1, 10]}]
+tuned_parameters = [{'kernel': ['linear'], 'C': [0.1, 1, 10]}]
 
 print("# Tuning hyper-parameters:")
 
